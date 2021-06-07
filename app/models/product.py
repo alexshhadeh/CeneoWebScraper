@@ -1,6 +1,7 @@
 #import sys
 #import os
 #sys.path.append(os.path.abspath('...'))
+from flask.globals import request
 from app.utils import extractComponent
 import requests
 from bs4 import BeautifulSoup
@@ -11,7 +12,15 @@ class Product:
     def __init__(self, productId, productName=None, opinions=[]) -> None:
         self.productId=productId
         self.productName=productName
-        self.opinions=opinions
+        self.opinions = opinions.copy()
+
+    def extractName(self):
+        response = requests.get(
+            "https://www.ceneo.pl/{}#tab=reviews".format(self.productId))
+        if response.status_code == requests.codes.ok:
+            pageDOM = BeautifulSoup(response.text, 'html.parser')
+            self.productName = extractComponent(pageDOM, '.js_product-h1-link')
+            
     def extractProduct(self):
         response=requests.get(f'https://www.ceneo.pl/{self.productId}#tab=reviews')
         page=2
